@@ -21,7 +21,8 @@ public class Player : Character
 
         if (Input.GetMouseButton(0)){
             if (canAttack){
-                PerformAttack();
+                //PerformAttack();
+                longRangeAttack();
             }
         }
 
@@ -69,6 +70,17 @@ public class Player : Character
                 }
             }
         }
+    }
+
+    void longRangeAttack()
+    {
+        RaycastHit hit;
+        
+        if (Physics.Raycast(transform.position, Vector3.right, out hit, Mathf.Infinity))
+        {
+            Debug.Log("ENEMY HIT");
+        }
+
     }
 
 }
