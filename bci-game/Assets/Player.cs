@@ -10,19 +10,55 @@ public class Player : Character
     public int attackDamage = 10; 
     public float attackCooldown = 1f; 
     public Transform frontCheck; 
-    private bool canAttack = true; 
+    private bool canAttack = true;
+
+    private float directionFacing = 1;
+    public int weaponChosen = 1;
 
     public override float[] GetInput() {
+        //KEYBOARD INPUT
         float hInput = Input.GetAxis("Horizontal");
         float vInput = Input.GetAxis("Vertical");
+
         if (hInput != 0) {
             animator.SetFloat("X", hInput);
+
+            //determine the direction the player is facing
+            if (hInput < 0)
+                directionFacing = -1;
+            else if (hInput > 0)
+                directionFacing = 1;
         }
 
+        //switching weapons
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            weaponChosen = 0;
+        else if (Input.GetKeyDown(KeyCode.Alpha2))
+            weaponChosen = 1;
+
+        if (Input.mouseScrollDelta.y > 0)
+            weaponChosen++;
+        else if (Input.mouseScrollDelta.y < 0)
+            weaponChosen--;
+
+        if (weaponChosen > 1)
+            weaponChosen = 0;
+        else if (weaponChosen < 0)
+            weaponChosen = 1;
+
+        //MOUSE INPUT
         if (Input.GetMouseButton(0)){
+
             if (canAttack){
-                //PerformAttack();
-                longRangeAttack();
+                if (weaponChosen == 0)
+                {
+                    MeleeAttack();
+                }
+                else if (weaponChosen == 1)
+                {
+                    longRangeAttack();
+                }
+
             }
         }
 
@@ -44,18 +80,17 @@ public class Player : Character
         yield return null;
     }
 
-    void PerformAttack()
+    void MeleeAttack()
     {
         if (canAttack)
         {
-            StartCoroutine(AttackCooldown()); // prevent further attacks during cooldown
 
+            StartCoroutine(AttackCooldown()); // prevent further attacks during cooldown
             //flip hitbox if it is facing the wrong direction
             float hitboxLoc = frontCheck.position.x - transform.position.x;
             if ((animator.GetFloat("X") > 0.5) ^ (hitboxLoc > 0)) {//XOR
                 frontCheck.position -= new Vector3(hitboxLoc * 2, 0, 0);
             }
-
 
             animator.SetTrigger("isMelee");
             Collider[] hitColliders = Physics.OverlapSphere(frontCheck.position, attackRange);
@@ -74,13 +109,24 @@ public class Player : Character
 
     void longRangeAttack()
     {
-        RaycastHit hit;
-        
-        if (Physics.Raycast(transform.position, Vector3.right, out hit, Mathf.Infinity))
+        if (canAttack)
         {
-            Debug.Log("ENEMY HIT");
+            StartCoroutine(AttackCooldown()); // prevent further attacks during cooldown
+
+            RaycastHit hit;
+
+            if (Physics.Raycast(transform.position, Vector3.right * directionFacing, out hit, Mathf.Infinity))
+            {
+                if (hit.transform.gameObject.CompareTag("Enemy"))
+                {
+                    Enemy enemy = hit.transform.gameObject.GetComponent<Enemy>();
+                    Debug.Log("ENEMY HIT");
+                }
+            }
+
         }
 
     }
+
 
 }
